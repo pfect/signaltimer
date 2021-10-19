@@ -79,7 +79,7 @@ int getprogrampid(char *targetbinary)
 
 int main(int argc, char* argv[])
 {
-	ini_t *config = ini_load(INI_FILE);
+	
 	char *targetbinary = NULL;
 	char *signal = NULL;
 	char *interval = NULL;	
@@ -87,49 +87,75 @@ int main(int argc, char* argv[])
 	int persistedpid=-1;
 	int persistedinterval = 0;
 	int timercount=0;
-	ini_sget(config, "timer", "targetbinary", NULL, &targetbinary);
-	ini_sget(config, "timer", "signal", NULL, &signal);
-	ini_sget(config, "timer", "interval", NULL, &interval);
-	log_trace("[%d] Timer v0.0 :: Target: %s Signal: %s Interval: %s ",getpid(),targetbinary,signal,interval);
+	
+	log_set_level(LOG_INFO);
+	
+	ini_t *config = ini_load(INI_FILE);
+	if ( config != NULL ) 
+	{
+		ini_sget(config, "timer", "targetbinary", NULL, &targetbinary);
+		ini_sget(config, "timer", "signal", NULL, &signal);
+		ini_sget(config, "timer", "interval", NULL, &interval);
+		log_info("[%d] Timer v0.0 :: Target: %s Signal: %s Interval: %s ",getpid(),targetbinary,signal,interval);
+	} 
+	if ( config == NULL ) 
+	{
+		log_error("[%d] failed to load ini-file, exiting. ",getpid());
+		return -1;
+	}
 	
 	while ( 1 ) 
 	{
 		config = ini_load(INI_FILE);
-		ini_sget(config, "timer", "interval", NULL, &interval);
+		if ( config != NULL ) 
+		{
+			ini_sget(config, "timer", "interval", NULL, &interval);
+			ini_free(config);
+		}		
 		
 		if ( persistedinterval != atoi(interval) ) 
 		{
 			persistedinterval= atoi(interval);
 			timercount=0;
-			log_trace("[%d] Updated interval: %s ",getpid(),interval);
+			log_info("[%d] Updated interval: %s ",getpid(),interval);
 		}
 		
-		
+			log_debug("[%d] #1 ",getpid() ); // ***
 		
 		pidfound = getprogrampid(targetbinary);
 		
+			log_debug("[%d] #2 ",getpid() ); // ***
+		
 		if ( pidfound != -1 && persistedpid != pidfound ) {
 			persistedpid = pidfound;
-			log_trace("[%d] Detected '%s' with PID: '%d' ",getpid(), targetbinary, pidfound );
+			log_info("[%d] Detected '%s' with PID: '%d' ",getpid(), targetbinary, pidfound );
 			timercount = 0;
 		} 
+			
+			log_debug("[%d] #3 ",getpid() ); // ***
+			
 		if ( pidfound == -1 && persistedpid != -1 ) 
 		{
-			log_trace("[%d] Program PID (%d) is gone",getpid(),persistedpid );
+			log_info("[%d] Program PID (%d) is gone",getpid(),persistedpid );
 			persistedpid = -1;
 			timercount = 0;
 		}
+		
+			log_debug("[%d] #4 ",getpid() ); // ***
+		
 		if ( persistedpid != -1 ) 
 		{
 			timercount++;
-			
 			if ( timercount == atoi(interval) )
 			{
 				int ret =  kill(persistedpid, atoi(signal) );
-				log_trace("[%d] Timer count: %d to %d => Sent SIGNAL: %d to PID: %d ",getpid(), timercount,atoi(interval),atoi(signal),persistedpid );
+				log_info("[%d] Timer count: %d to %d => Sent SIGNAL: %d to PID: %d ",getpid(), timercount,atoi(interval),atoi(signal),persistedpid );
 				timercount=0;
 			}
 		}
+		
+			log_debug("[%d] #5 ",getpid() ); // ***
+		
 		sleep (1);
 	}
 	
