@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
 	char *interval = NULL;	
 	int pidfound=-1;
 	int persistedpid=-1;
+	int persistedinterval = 0;
 	int timercount=0;
 	ini_sget(config, "timer", "targetbinary", NULL, &targetbinary);
 	ini_sget(config, "timer", "signal", NULL, &signal);
@@ -93,6 +94,18 @@ int main(int argc, char* argv[])
 	
 	while ( 1 ) 
 	{
+		config = ini_load(INI_FILE);
+		ini_sget(config, "timer", "interval", NULL, &interval);
+		
+		if ( persistedinterval != atoi(interval) ) 
+		{
+			persistedinterval= atoi(interval);
+			timercount=0;
+			log_trace("[%d] Updated interval: %s ",getpid(),interval);
+		}
+		
+		
+		
 		pidfound = getprogrampid(targetbinary);
 		
 		if ( pidfound != -1 && persistedpid != pidfound ) {
