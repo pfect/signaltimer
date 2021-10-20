@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 	int persistedinterval = 0;
 	int timercount=0;
 	
-	log_set_level(LOG_INFO);
+	log_set_level(LOG_DEBUG);
 	
 	ini_t *config = ini_load(INI_FILE);
 	if ( config != NULL ) 
