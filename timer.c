@@ -61,14 +61,15 @@ int getprogrampid(char *targetbinary)
 			char cmdline_file[1024] = {0};
 			sprintf(cmdline_file, "%s/%d/cmdline", procdir, pid);
 			FILE* cmdline = fopen(cmdline_file, "r");
-			if (getline(&processname, &processnamelen, cmdline) > 0)
+			if (cmdline != NULL && getline(&processname, &processnamelen, cmdline) > 0)
 			{
 			   if (strstr(processname, targetbinary ) != 0)
 			   {
 				  foundpid = pid;
 			   }
 			}
-			fclose(cmdline);
+			if (cmdline != NULL)
+				fclose(cmdline);
 		 }
 	  }
 	  closedir(dir);
@@ -88,7 +89,7 @@ int main(int argc, char* argv[])
 	int persistedinterval = 0;
 	int timercount=0;
 	
-	log_set_level(LOG_DEBUG);
+	log_set_level(LOG_INFO);
 	
 	ini_t *config = ini_load(INI_FILE);
 	if ( config != NULL ) 
